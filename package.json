@@ -31,5 +31,8 @@
     "commitizen": {
       "path": "cz-conventional-changelog"
     }
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }

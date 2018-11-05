@@ -1,46 +1,29 @@
 const { URL } = require('url')
 
+const typeParsers = {
+  'merge_requests': mr => ({ mr: parseInt(mr, 10) }),
+  'issues': issue => ({ issue: parseInt(issue, 10) }),
+  'tree': branch => ({ branch }),
+  'commits': branch => ({ branch }),
+  'commit': commit => ({ commit })
+}
+
 module.exports = parse
 function parse (gitlabUrl) {
   if (typeof gitlabUrl !== 'string') {
     throw new Error('Expected gitLabUrl of type string')
   }
   const url = new URL(gitlabUrl)
-
   const path = url.pathname
-  const parts = path.split('/')
 
-  let result = {}
+  // ignore trailing slash
+  const [, user, project, type, ...rest] = path.split('/')
 
-  // trailing slash
-  parts.shift()
+  let result = { user, project }
 
-  // user
-  const user = parts.shift()
-  result = { ...result, user }
-
-  // project
-  const project = parts.shift()
-  result = { ...result, project }
-
-  // type
-  const type = parts.shift()
-
-  if (type === 'merge_requests') {
-    const mr = parseInt(parts.shift(), 10)
-    result = { ...result, mr }
-  } else if (type === 'issues') {
-    const issue = parseInt(parts.shift(), 10)
-    result = { ...result, issue }
-  } else if (type === 'tree') {
-    const branch = parts.shift()
-    result = { ...result, branch }
-  } else if (type === 'commits') {
-    const branch = parts.shift()
-    result = { ...result, branch }
-  } else if (type === 'commit') {
-    const commit = parts.shift()
-    result = { ...result, commit }
+  const typeParser = typeParsers[type]
+  if (typeParser) {
+    result = { ...result, ...typeParser(rest.shift()) }
   }
 
   return result
